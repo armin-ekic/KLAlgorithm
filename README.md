@@ -7,3 +7,8 @@ Inputs:
   -the text files test.txt and test-are.txt are examples of the files that are needed as inputs
   -the files need to be chosen test.txt and test-are.txt in that order
   -at this point, the algorithm will do all the necessary computation
+
+Notation:
+  -nodes is a dict, holding values with the following notation: {'nodeName': ('nodeSize',internalCost,externalCost)}
+  -modE is a dict, holding values with the following notation: {('node1',node2'): modifiedEdgeWeight}
+  -partA and partB are the partitions produced by the algorithm, and will be variable length lists (though will be constrained to nxn where 2n is the number of nodes 
