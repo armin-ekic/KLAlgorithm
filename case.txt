@@ -1,0 +1,16 @@
+0
+13
+5
+7
+3
+a s 1
+f l
+g l
+a s 1
+b l
+c s 1
+g l
+d l
+d s 1
+e l
+h 1

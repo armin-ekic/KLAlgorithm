@@ -46,12 +46,10 @@ def hyperGraph():
     nodes = {}
     while True: #loop through the .are file to obtain all components and their sizes
         compLine = compSizes.readline()
-        compInfo = compLine.split() #split up the information in the line and store in an array
         if not compLine:
             break
-        nodes[compInfo[0]] = (compInfo[1], float(0), float(0), "a",  0) #tuple with key as component name
-        #value of dict is tuple with component size, internal cost, external cost (initially 0), partition that it
-        #   is in (initialized to a for all), and locked value (0 for unlocked, 1 for locked)
+        nodes[compLine[:2]] = (compLine[len(compLine)-2], float(0), float(0)) #tuple with key as component
+        #value of dict is tuple with component size, internal cost, and external cost (initially 0)
 
     #here we will iterate through the file and interpret the netlist for our hyperedges
     while True:
@@ -60,27 +58,26 @@ def hyperGraph():
             if not netLine:
                 E.append(tuple(hyperEdge))
                 break
-            netInfo = netLine.split() #holds the information for the portion of the net
             if "s" in netLine:
                 if hyperEdge:
                     E.append(tuple(hyperEdge))
-                hyperEdge = [netInfo[-1], netInfo[0]]
+                hyperEdge = [netLine[len(netLine)-2], netLine[:2]]
             else:
-                hyperEdge.append(netInfo[0])
+                hyperEdge.append(netLine[:2])
         count+=1
 
     modE = netCut(E)
-    #print(f'nodes: {nodes}')
-    #print(f'E: {E}')
-    #print(f'modeE: {modE}')
+    print(f'nodes: {nodes}')
+    print(f'E: {E}')
+    print(f'modeE: {modE}')
     return nodes, E, modE
 
 
 # this function will take the partitions and determine internal/external costs of each component
 # arguments:
 #   P1 and P2 are lists containing the components in each partition
-#   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost,
-#       external cost (in that order), and an indicator of which partition they are in
+#   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost, and
+#       external cost (in that order)
 #   modE is the modified edge dictionary containing edge pairs as keys and their weights as values
 def ieCost(P1, P2, nodes, modE):
     for edge in modE:
