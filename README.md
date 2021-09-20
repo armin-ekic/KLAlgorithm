@@ -15,7 +15,7 @@ Inputs:
 
 Notation:
 
-  -nodes is a dict, holding values with the following notation: {'nodeName': ('nodeSize',internalCost,externalCost)}
+  -nodes is a dict, holding values with the following notation: {'nodeName': ('nodeSize',internalCost,externalCost,parition,lockValue)}
   
   -modE is a dict, holding values with the following notation: {('node1',node2'): modifiedEdgeWeight}
   
