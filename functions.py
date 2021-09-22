@@ -1,5 +1,7 @@
 """This file will be used to define all the necessary functions of the algorithm"""
 
+from __future__ import absolute_import
+
 from tkinter import Tk
 
 from tkinter.filedialog import askopenfilename, askopenfilenames
@@ -82,11 +84,18 @@ def hyperGraph():
 #   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost,
 #       external cost (in that order), and an indicator of which partition they are in
 #   modE is the modified edge dictionary containing edge pairs as keys and their weights as values
-def ieCost(P1, P2, nodes, modE):
+def ieCost(nodes, modE):
     for edge in modE:
         temp0 = list(nodes[edge[0]]) #temporary variable used to manipulate the internal cost
         temp1 = list(nodes[edge[1]]) #temporary variable used to manipulate the external cost
-        if edge[0] in P1 and edge[1] in P2: #if they are in opposite partitions
+        if (nodes[edge[0]][3] == "a") and (nodes[edge[1]][3] in "b"): #if they are in opposite partitions
+            #nodes[edge[0]][2] will look into the first entry of the edge tuple, and use this to index into the nodes dictionary
+            #   [2] will access the value in the nodes tuple pertaining to external cost
+            temp0[2] += modE[edge]  #increment the external cost of the first node
+            temp1[2] += modE[edge]  # increment the external cost of the second node
+            nodes[edge[0]] = tuple(temp0)
+            nodes[edge[1]] = tuple(temp1)
+        elif (nodes[edge[0]][3] == "b") and (nodes[edge[1]][3] in "a"): #if they are in opposite partitions
             #nodes[edge[0]][2] will look into the first entry of the edge tuple, and use this to index into the nodes dictionary
             #   [2] will access the value in the nodes tuple pertaining to external cost
             temp0[2] += modE[edge]  #increment the external cost of the first node
@@ -99,3 +108,149 @@ def ieCost(P1, P2, nodes, modE):
             nodes[edge[0]] = tuple(temp0)
             nodes[edge[1]] = tuple(temp1)
         del temp0, temp1
+
+
+#this function will take two nodes based on the two pertaining to the biggest cost, and swap them
+#inputs:
+#   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost,
+#       external cost (in that order), and an indicator of which partition they are in
+#   maxKey is the pair of nodes that reduce the cut-size by the largest amount when swapped
+#   partA is the "A" partition
+#   partB is the "B" partition
+#   D is the dict holding D values for all nodes
+#   modE is the modified edge dictionary containing edge pairs as keys and their weights as values
+def swapNodes(nodes, maxKey, partA, partB, D, modE):
+    if nodes[maxKey[0]][3] == "a":  # here we will swap the nodes if the first node in the edge is in partition A
+        nodeAIndex = partA.index(maxKey[0])
+        nodeBIndex = partB.index(maxKey[1])
+        nodeA = partA[nodeAIndex]
+        partA[nodeAIndex] = partB[nodeBIndex]
+        partB[nodeBIndex] = nodeA
+        temp0 = list(nodes[maxKey[0]])
+        temp1 = list(nodes[maxKey[1]])
+        temp0[3] = "b"
+        temp1[3] = "a"
+        nodes[maxKey[0]] = tuple(temp0)
+        nodes[maxKey[1]] = tuple(temp1)
+        for node in nodes:  # here we loop through the nodes dict to calculate our D values for unlocked nodes
+            if nodes[node][4] != 1:  # here we calculate the D values for the first step in the iteration
+                if nodes[node][
+                    3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
+                    try:
+                        D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(node, maxKey[1])])
+                    except KeyError:
+                        pass
+                    else:
+                        try:
+                            D[node] = D[node] + 2 * (modE[(maxKey[0], node)]) - 2 * (modE[(node, maxKey[1])])
+                        except KeyError:
+                            pass
+                        else:
+                            try:
+                                D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(maxKey[1], node)])
+                            except KeyError:
+                                pass
+                            else:
+                                D[node] = D[node] + 2 * (modE[(maxKey[0]), node]) - 2 * (modE[(maxKey[1], node)])
+                else:
+                    try:
+                        D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(node, maxKey[0])])
+                    except KeyError:
+                        pass
+                    else:
+                        try:
+                            D[node] = D[node] + 2 * (modE[(maxKey[1], node)]) - 2 * (modE[(node, maxKey[0])])
+                        except KeyError:
+                            pass
+                        else:
+                            try:
+                                D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(maxKey[0], node)])
+                            except KeyError:
+                                pass
+                            else:
+                                D[node] = D[node] + 2 * (modE[(maxKey[1]), node]) - 2 * (modE[(maxKey[0], node)])
+
+    else:  # here we will swap the nodes if the first node in the edge is in partition B
+        nodeAIndex = partA.index(maxKey[1])
+        nodeBIndex = partB.index(maxKey[0])
+        nodeA = partA[nodeAIndex]
+        partA[nodeAIndex] = partB[nodeBIndex]
+        partB[nodeBIndex] = nodeA
+        temp0 = list(nodes[maxKey[0]])
+        temp1 = list(nodes[maxKey[1]])
+        temp0[3] = "a"
+        temp1[3] = "b"
+        nodes[maxKey[0]] = tuple(temp0)
+        nodes[maxKey[1]] = tuple(temp1)
+        for node in nodes:  # here we loop through the nodes dict to calculate our D values for unlocked nodes
+            if nodes[node][4] != 1:  # here we calculate the D values for the first step in the iteration
+                if nodes[node][
+                    3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
+                    try:
+                        D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(node, maxKey[0])])
+                    except KeyError:
+                        continue
+                    else:
+                        try:
+                            D[node] = D[node] + 2 * (modE[(maxKey[1], node)]) - 2 * (modE[(node, maxKey[0])])
+                        except KeyError:
+                            continue
+                        else:
+                            try:
+                                D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (
+                                    modE[(maxKey[0], node)])
+                            except KeyError:
+                                continue
+                            else:
+                                D[node] = D[node] + 2 * (modE[(maxKey[1]), node]) - 2 * (
+                                    modE[(maxKey[0], node)])
+                else:
+                    try:
+                        D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(node, maxKey[1])])
+                    except KeyError:
+                        continue
+                    else:
+                        try:
+                            D[node] = D[node] + 2 * (modE[(maxKey[0], node)]) - 2 * (modE[(node, maxKey[1])])
+                        except KeyError:
+                            continue
+                        else:
+                            try:
+                                D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (
+                                    modE[(maxKey[1], node)])
+                            except KeyError:
+                                continue
+                            else:
+                                D[node] = D[node] + 2 * (modE[(maxKey[0]), node]) - 2 * (
+                                    modE[(maxKey[1], node)])
+
+
+#this function will take the partitions and calculate the gains pertaining to all possible component pairs
+#inputs:
+#   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost,
+#       external cost (in that order), and an indicator of which partition they are in
+#   g is the gain dict holding each pair of nodes and their corresponding gain
+#   partA is the "A" partition
+#   partB is the "B" partition
+#   D is the dict holding D values for all nodes
+#   modE is the modified edge dictionary containing edge pairs as keys and their weights as values
+def gain(partA, partB, nodes, modE, D, g):
+    for nodeA in partA:  # this loop will go through the edge pairs and calculate gain values
+        if nodes[nodeA][4] == 1:
+            continue
+        else:
+            for nodeB in partB:
+                if nodes[nodeB][4] == 1:  # we are only concerned with gains for non-locked values
+                    continue
+                else:
+                    print((nodeA, nodeB) in modE)
+                    if ((nodeA, nodeB) in modE) or ((nodeB, nodeA) in modE):
+                        try:
+                            g[(nodeA, nodeB)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeA, nodeB)])
+                        except KeyError:
+                            pass
+                        else:
+                            g[(nodeB, nodeA)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeB, nodeA)])
+                    else:
+                        g[(nodeA, nodeB)] = D[nodeA] + D[nodeB]  # gxy = Dx + Dy - 2Cxy
+    return g
