@@ -22,6 +22,8 @@ Notation:
   -partA and partB are the partitions produced by the algorithm, and will be variable length lists (though will be constrained to nxn where 2n is the number of nodes 
 
 
+
+
 What this project taught me:
 
   I will preface this by saying that I am still working on improving the code and its efficiency. There are lots of areas that need to be cleaned up, and some comments that could improve documentation.
