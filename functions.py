@@ -110,7 +110,7 @@ def ieCost(nodes, modE):
         del temp0, temp1
 
 
-#this function will take two nodes based on the two pertaining to the biggest cost, and swap them
+#this function will take two nodes based on the two pertaining to the biggest cost, and swap them, then find D prime values
 #inputs:
 #   nodes is the component dictionary, keys are components, values are tuples of component size, internal cost,
 #       external cost (in that order), and an indicator of which partition they are in
@@ -119,7 +119,7 @@ def ieCost(nodes, modE):
 #   partB is the "B" partition
 #   D is the dict holding D values for all nodes
 #   modE is the modified edge dictionary containing edge pairs as keys and their weights as values
-def swapNodes(nodes, maxKey, partA, partB, D, modE):
+def swapNodes(nodes, maxKey, partA, partB, D, modE, optPartA, optPartB):
     if nodes[maxKey[0]][3] == "a":  # here we will swap the nodes if the first node in the edge is in partition A
         nodeAIndex = partA.index(maxKey[0])
         nodeBIndex = partB.index(maxKey[1])
@@ -132,44 +132,48 @@ def swapNodes(nodes, maxKey, partA, partB, D, modE):
         temp1[3] = "a"
         nodes[maxKey[0]] = tuple(temp0)
         nodes[maxKey[1]] = tuple(temp1)
+
+        temp0 = list(nodes[maxKey[0]])  # here we are indicating that the swapped nodes are locked
+        temp0[4] = 1
+        nodes[maxKey[0]] = tuple(temp0)
+        temp1 = list(nodes[maxKey[1]])
+        temp1[4] = 1
+        nodes[maxKey[1]] = tuple(temp1)
+
         for node in nodes:  # here we loop through the nodes dict to calculate our D values for unlocked nodes
             if nodes[node][4] != 1:  # here we calculate the D values for the first step in the iteration
-                if nodes[node][
-                    3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
+                if nodes[node][3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
                     try:
-                        D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(node, maxKey[1])])
+                        Cxd = modE[(node, maxKey[0])]
                     except KeyError:
-                        pass
-                    else:
                         try:
-                            D[node] = D[node] + 2 * (modE[(maxKey[0], node)]) - 2 * (modE[(node, maxKey[1])])
-                        except KeyError:
-                            pass
-                        else:
-                            try:
-                                D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(maxKey[1], node)])
-                            except KeyError:
-                                pass
-                            else:
-                                D[node] = D[node] + 2 * (modE[(maxKey[0]), node]) - 2 * (modE[(maxKey[1], node)])
+                            Cxd = modE[(maxKey[0], node)]
+                        except:
+                            Cxd = 0
+                    try:
+                        Cxg = modE[(node, maxKey[1])]
+                    except KeyError:
+                        try:
+                            Cxg = modE[(maxKey[1], node)]
+                        except:
+                            Cxg = 0
+                    D[node] = D[node] + (2 * Cxd) - (2 * Cxg)
                 else:
                     try:
-                        D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(node, maxKey[0])])
+                        Cxd = modE[(node, maxKey[1])]
                     except KeyError:
-                        pass
-                    else:
                         try:
-                            D[node] = D[node] + 2 * (modE[(maxKey[1], node)]) - 2 * (modE[(node, maxKey[0])])
-                        except KeyError:
-                            pass
-                        else:
-                            try:
-                                D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(maxKey[0], node)])
-                            except KeyError:
-                                pass
-                            else:
-                                D[node] = D[node] + 2 * (modE[(maxKey[1]), node]) - 2 * (modE[(maxKey[0], node)])
-
+                            Cxd = modE[(maxKey[1], node)]
+                        except:
+                            Cxd = 0
+                    try:
+                        Cxg = modE[(node, maxKey[0])]
+                    except KeyError:
+                        try:
+                            Cxg = modE[(maxKey[0], node)]
+                        except:
+                            Cxg = 0
+                    D[node] = D[node] + (2 * Cxd) - (2 * Cxg)
     else:  # here we will swap the nodes if the first node in the edge is in partition B
         nodeAIndex = partA.index(maxKey[1])
         nodeBIndex = partB.index(maxKey[0])
@@ -182,47 +186,48 @@ def swapNodes(nodes, maxKey, partA, partB, D, modE):
         temp1[3] = "b"
         nodes[maxKey[0]] = tuple(temp0)
         nodes[maxKey[1]] = tuple(temp1)
+
+        temp0 = list(nodes[maxKey[0]])  # here we are indicating that the swapped nodes are locked
+        temp0[4] = 1
+        nodes[maxKey[0]] = tuple(temp0)
+        temp1 = list(nodes[maxKey[1]])
+        temp1[4] = 1
+        nodes[maxKey[1]] = tuple(temp1)
+
         for node in nodes:  # here we loop through the nodes dict to calculate our D values for unlocked nodes
             if nodes[node][4] != 1:  # here we calculate the D values for the first step in the iteration
-                if nodes[node][
-                    3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
+                if nodes[node][3] == "a":  # if this node is in the A partition, and we already have a preexisting D value
                     try:
-                        D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (modE[(node, maxKey[0])])
+                        Cxd = modE[(node, maxKey[1])]
                     except KeyError:
-                        continue
-                    else:
                         try:
-                            D[node] = D[node] + 2 * (modE[(maxKey[1], node)]) - 2 * (modE[(node, maxKey[0])])
-                        except KeyError:
-                            continue
-                        else:
-                            try:
-                                D[node] = D[node] + 2 * (modE[(node, maxKey[1])]) - 2 * (
-                                    modE[(maxKey[0], node)])
-                            except KeyError:
-                                continue
-                            else:
-                                D[node] = D[node] + 2 * (modE[(maxKey[1]), node]) - 2 * (
-                                    modE[(maxKey[0], node)])
+                            Cxd = modE[(maxKey[1], node)]
+                        except:
+                            Cxd = 0
+                    try:
+                        Cxg = modE[(node, maxKey[0])]
+                    except KeyError:
+                        try:
+                            Cxg = modE[(maxKey[0], node)]
+                        except:
+                            Cxg = 0
+                    D[node] = D[node] + (2 * Cxd) - (2 * Cxg)
                 else:
                     try:
-                        D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (modE[(node, maxKey[1])])
+                        Cxd = modE[(node, maxKey[0])]
                     except KeyError:
-                        continue
-                    else:
                         try:
-                            D[node] = D[node] + 2 * (modE[(maxKey[0], node)]) - 2 * (modE[(node, maxKey[1])])
-                        except KeyError:
-                            continue
-                        else:
-                            try:
-                                D[node] = D[node] + 2 * (modE[(node, maxKey[0])]) - 2 * (
-                                    modE[(maxKey[1], node)])
-                            except KeyError:
-                                continue
-                            else:
-                                D[node] = D[node] + 2 * (modE[(maxKey[0]), node]) - 2 * (
-                                    modE[(maxKey[1], node)])
+                            Cxd = modE[(maxKey[0], node)]
+                        except:
+                            Cxd = 0
+                    try:
+                        Cxg = modE[(node, maxKey[1])]
+                    except KeyError:
+                        try:
+                            Cxg = modE[(maxKey[1], node)]
+                        except:
+                            Cxg = 0
+                    D[node] = D[node] + (2 * Cxd) - (2 * Cxg)
 
 
 #this function will take the partitions and calculate the gains pertaining to all possible component pairs
@@ -243,14 +248,11 @@ def gain(partA, partB, nodes, modE, D, g):
                 if nodes[nodeB][4] == 1:  # we are only concerned with gains for non-locked values
                     continue
                 else:
-                    print((nodeA, nodeB) in modE)
                     if ((nodeA, nodeB) in modE) or ((nodeB, nodeA) in modE):
                         try:
-                            g[(nodeA, nodeB)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeA, nodeB)])
+                            g[(nodeA, nodeB)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeA, nodeB)]) #try to calculate the gain using (nodeA,nodeB) as the key for modE
                         except KeyError:
-                            pass
-                        else:
-                            g[(nodeB, nodeA)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeB, nodeA)])
+                            g[(nodeB, nodeA)] = D[nodeA] + D[nodeB] - 2 * (modE[(nodeB, nodeA)]) #if the above key does not work, use (nodeB,nodeA) as the key
                     else:
                         g[(nodeA, nodeB)] = D[nodeA] + D[nodeB]  # gxy = Dx + Dy - 2Cxy
     return g
